@@ -1,15 +1,30 @@
-#include "parser.h"
+/* Group 27
+Venkat Nalla Siddartha Reddy                2016A7PS0030P
+Arnav Sailesh                               2016A7PS0054P
+Gunraj Singh                                2016A7PS0085P
+Aashish Singh                               2016A7PS0683P */
+
 #include "interface.h"
+#include "parserDef.h"
 #include "lexer.h"
+#include "nary_tree.h"
+#include "stack.h"
 #include <string.h>
-#define GRAMMAR_FILE "grammar.txt"
+#define GRAMMAR_FILE "GRAMMAR.txt"
 #define TOTAL_GRAMMAR_NONTERMINALS 49 // TODO get the actual number of nonterminals
 #define TOTAL_GRAMMAR_TERMINALS 56
 #define TOTAL_GRAMMAR_RULES 87 //TODO actual number of rules
+
+Grammar* g; // g is a record that keeps track of the Grammar
+
+NonTerminalRuleRecords** ntrr; // Mantains records of the starting rule number and ending rule number of the non terminal indicated by it's array index
+int checkIfDone[TOTAL_GRAMMAR_NONTERMINALS] = {0}; // A global structure to check if the First has been calculated for the corresponding non terminal
+int vectorSize = TOTAL_GRAMMAR_TERMINALS+1; // Calculate the size of vectors for first and follow
+
 int syntaxErrorFlag;
 int lexicalErrorFlag;
 
-Grammar* g;
+// An array of strings which stores the terminals in the same order as the enum, this is used to get the enum identifier of the TerminalID
 char* TerminalID[] = {
     "TK_ASSIGNOP",
     "TK_COMMENT",
@@ -18,7 +33,7 @@ char* TerminalID[] = {
     "TK_RNUM",
     "TK_FIELDID",
     "TK_FUNID",
-    "TK_RUID",
+    "TK_RECORDID",
     "TK_WITH",
     "TK_PARAMETERS",
     "TK_END",
@@ -66,9 +81,63 @@ char* TerminalID[] = {
     "TK_NE",
     "TK_EPS",
     "TK_DOLLAR",
-    "TK_ERR",
-    "TK_UNION"
+    "TK_ERR"
 };
+
+// An array of strings which stores the non terminals in the same order as the enum, this is used to get the enum identifier of the NonTerminalID
+char* NonTerminalID[] = {
+    "program",
+    "mainFunction",
+	"otherFunctions",
+	"function",
+	"input_par",
+	"output_par",
+	"parameter_list",
+	"dataType",
+	"primitiveDatatype",
+	"constructedDatatype",
+	"remaining_list",
+	"stmts",
+	"typeDefinitions",
+	"typeDefinition",
+	"fieldDefinitions",
+	"fieldDefinition",
+	"moreFields",
+	"declarations",
+	"declaration",
+	"global_or_not",
+	"otherStmts",
+	"stmt",
+	"assignmentStmt",
+	"singleOrRecId",
+    "new_24",
+	"funCallStmt",
+	"outputParameters",
+	"inputParameters",
+	"iterativeStmt",
+	"conditionalStmt",
+	"elsePart",
+	"ioStmt",
+	"arithmeticExpression",
+	"expPrime",
+	"term",
+	"termPrime",
+	"factor",
+	"highPrecedenceOperators",
+	"lowPrecedenceOperators",
+    "all",
+	"temp",
+    "booleanExpression",
+    "var",
+	"logicalOp",
+	"relationalOp",
+	"returnStmt",
+	"optionalReturn",
+	"idList",
+	"more_ids"
+};
+
+//Utility function to copy a lexeme
 char* copyLexeme(char* str) {
     int len = strlen(str);
     char* lex = (char*)malloc(sizeof(char)*(len+1));
@@ -78,6 +147,7 @@ char* copyLexeme(char* str) {
     lex[len] = '\0';
     return lex;
 }
+
 // Utility function to append a character to symbol string
 char* appendToSymbol(char* str, char c) {
     int len = strlen(str);
@@ -89,7 +159,8 @@ char* appendToSymbol(char* str, char c) {
     strConcat[len+1] = '\0';
     return strConcat;
 }
-// Returns the Enum ID of the string in the TerminalID map if found, otherwise returns -1
+
+// Returns the Enum ID of the string in the NonTerminal ID map if found, otherwise return -1
 int findInTerminalMap(char* str) {
     for(int i=0; i < TOTAL_GRAMMAR_TERMINALS; i++) {
         if(strcmp(str,TerminalID[i]) == 0)
@@ -98,6 +169,7 @@ int findInTerminalMap(char* str) {
 
     return -1;
 }
+
 // Returns the Enum ID of the string in the NonTerminalID map if found, otherwise returns -1
 int findInNonTerminalMap(char* str) {
     for(int i=0; i < TOTAL_GRAMMAR_NONTERMINALS; i++) {
@@ -107,6 +179,8 @@ int findInNonTerminalMap(char* str) {
 
     return -1;
 }
+
+
 // Returns the string corresponding to the enumId (Required when printing is too be done outside parser.c)
 
 char* getTerminal(int enumId) {
@@ -116,6 +190,7 @@ char* getTerminal(int enumId) {
 char* getNonTerminal(int enumId) {
     return NonTerminalID[enumId];
 }
+
 ParsingTable* initialiseParsingTable() {
     ParsingTable* pt = (ParsingTable*)malloc(sizeof(ParsingTable));
     pt->entries = (int**)malloc(TOTAL_GRAMMAR_NONTERMINALS*sizeof(int*));
@@ -125,6 +200,8 @@ ParsingTable* initialiseParsingTable() {
     }
     return pt;
 }
+
+// initialise the Grammar according to the number of non terminals and total rules
 int initialiseGrammar() {
 
     g = (Grammar*)malloc(sizeof(Grammar));
@@ -132,6 +209,8 @@ int initialiseGrammar() {
     g->GRAMMAR_RULES = (Rule**)malloc(sizeof(Rule*)*g->GRAMMAR_RULES_SIZE);
     g->GRAMMAR_RULES[0] = NULL;
 }
+
+// Initialises a symbol structure based on the symbol string extracted from the grammar file
 Symbol* intialiseSymbol(char* symbol) {
 
     Symbol* s = (Symbol*)malloc(sizeof(Symbol));
@@ -155,12 +234,7 @@ Symbol* intialiseSymbol(char* symbol) {
 
     return s;
 }
-Rule* initialiseRule(SymbolList* sl, int ruleCount) {
-    Rule* r = (Rule*)malloc(sizeof(Rule));
-    r->SYMBOLS = sl;
-    r->RULE_NO = ruleCount;
-    return r;
-}
+
 SymbolList* initialiseSymbolList() {
     SymbolList* sl = (SymbolList*)malloc(sizeof(SymbolList));
     sl->HEAD_SYMBOL = NULL;
@@ -168,6 +242,14 @@ SymbolList* initialiseSymbolList() {
     sl->RULE_LENGTH = 0;
     return sl;
 }
+
+Rule* initialiseRule(SymbolList* sl, int ruleCount) {
+    Rule* r = (Rule*)malloc(sizeof(Rule));
+    r->SYMBOLS = sl;
+    r->RULE_NO = ruleCount;
+    return r;
+}
+
 NonTerminalRuleRecords** intialiseNonTerminalRecords() {
     NonTerminalRuleRecords** ntrr = (NonTerminalRuleRecords**)malloc(sizeof(NonTerminalRuleRecords*)*TOTAL_GRAMMAR_NONTERMINALS);
     return ntrr;
@@ -177,6 +259,7 @@ void initialiseCheckIfDone() {
     for(int i=0; i < TOTAL_GRAMMAR_NONTERMINALS; i++)
         checkIfDone[i] = 0;
 }
+
 FirstAndFollow* initialiseFirstAndFollow() {
     FirstAndFollow* fafl = (FirstAndFollow*)malloc(sizeof(FirstAndFollow));
 
@@ -190,9 +273,12 @@ FirstAndFollow* initialiseFirstAndFollow() {
         fafl->FIRST[i] = (int*)calloc(vectorSize,sizeof(int));
         fafl->FOLLOW[i] = (int*)calloc(vectorSize,sizeof(int));
     }
+
     return fafl;
 
 }
+
+// Calculates the First of the Symbol s and it's corresponding bit vector is populated by using the enum_id
 void calculateFirst(int** firstVector, int enumId) {
 
     // printf("Stack overflow being caused by %s\n" , NonTerminalID[enumId]);
@@ -250,6 +336,7 @@ void calculateFirst(int** firstVector, int enumId) {
     checkIfDone[enumId] = 1;
 
 }
+
 void populateFirst(int** firstVector, Grammar* g) {
 
     // Traversal is done by enum_id (which is iterator i in this case)
@@ -260,13 +347,17 @@ void populateFirst(int** firstVector, Grammar* g) {
             calculateFirst(firstVector,i);
     }
 }
+
 void populateFollow(int** followVector, int** firstVector, Grammar* g) {
+
+
     for(int i=1; i <= TOTAL_GRAMMAR_RULES; i++) {
         Rule* r = g->GRAMMAR_RULES[i];
         Symbol* head = r->SYMBOLS->HEAD_SYMBOL;
         Symbol* trav = head->next;
         int epsilonIdentifier = 0;
         while(trav != NULL) {
+
             if(trav->IS_TERMINAL == 0) {
                 Symbol* followTrav = trav->next;
                 while(followTrav != NULL) {
@@ -296,10 +387,13 @@ void populateFollow(int** followVector, int** firstVector, Grammar* g) {
                 }
 
             }
+
+
             trav = trav->next;
         }
     }
 }
+
 // Function to keep populating the followVector until it stabilises
 void populateFollowTillStable(int** followVector, int** firstVector, Grammar* g) {
     int** prevFollowVector = (int**)malloc(TOTAL_GRAMMAR_NONTERMINALS*sizeof(int*));
@@ -307,6 +401,7 @@ void populateFollowTillStable(int** followVector, int** firstVector, Grammar* g)
     for(int i=0; i < TOTAL_GRAMMAR_NONTERMINALS; i++) {
         prevFollowVector[i] = (int*)calloc(vectorSize,sizeof(int));
     }
+
     followVector[program][TK_DOLLAR] = 1;
     prevFollowVector[program][TK_DOLLAR] = 1;
 
@@ -321,6 +416,7 @@ void populateFollowTillStable(int** followVector, int** firstVector, Grammar* g)
                     stable = 0;
             }
         }
+
         if(stable)
             break;
 
@@ -330,12 +426,15 @@ void populateFollowTillStable(int** followVector, int** firstVector, Grammar* g)
         }
     }
 }
+
+
 FirstAndFollow* computeFirstAndFollowSets(Grammar* g) {
     FirstAndFollow* fafl = initialiseFirstAndFollow();
     populateFirst(fafl->FIRST,g);
     populateFollowTillStable(fafl->FOLLOW,fafl->FIRST,g);
     return fafl;
 }
+
 void createParseTable(FirstAndFollow* fafl, ParsingTable* pt) {
 
     for(int i=1; i <= TOTAL_GRAMMAR_RULES; i++) {
@@ -411,16 +510,26 @@ void addToSymbolList(SymbolList* ls, Symbol* s) {
         ls->RULE_LENGTH = 1;
         return;
     }
+
     ls->TAIL_SYMBOL->next = s;
     ls->TAIL_SYMBOL = s;
     ls->RULE_LENGTH += 1;
 }
+
+
+
+
+
+
+
+
+
+
 // Extracts the grammar from GRAMMAR_FILE, return 1 on success, 0 on error
 // Working rationale of the function
 //  => Identify the LHS Non_terminal
 //  => Keep making the Symbol List
 //  => Extract the enum number of the LHS Non terminal.
-// Now we are going to start using the functions we have defined earlier
 Grammar* extractGrammar() {
 
     int ruleCount = 1; // Variable which will be used in assigning the rule numbers to the extracted rules
@@ -501,6 +610,12 @@ Grammar* extractGrammar() {
 
     return g;
 }
+
+
+
+
+
+// Function which parses the input from the testCaseFile
 ParseTree* parseInputSourceCode(char *testcaseFile, ParsingTable* pTable, FirstAndFollow* fafl) {
 
     int f = open(testcaseFile,O_RDONLY);
@@ -684,9 +799,12 @@ ParseTree* parseInputSourceCode(char *testcaseFile, ParsingTable* pTable, FirstA
 
     return pt;
 }
+
 void printParseTreeHelper(NaryTreeNode * pt, FILE* f) {
+
     if(pt == NULL)
         return;
+
     if(pt->IS_LEAF_NODE == 1) {
         int tokenEnumID = pt->NODE_TYPE.L.ENUM_ID;
         char lexeme[30];
@@ -797,8 +915,11 @@ void printParseTreeHelper(NaryTreeNode * pt, FILE* f) {
 
     }
 }
+
 void printParseTree(ParseTree* pt, char* outfile) {
+
     FILE* f;
+
     // Print on console if no outfile is provided
     if(outfile == NULL)
         f = stdout;
@@ -809,11 +930,15 @@ void printParseTree(ParseTree* pt, char* outfile) {
         printf("Error opening the outfile\n");
         return;
     }
+
     printParseTreeHelper(pt->root,f);
+
     // Do not close stdout
     if(f != stdout)
         fclose(f);
+
 }
+
 //Utility function to print all symbols in the list
 void printSymbolList(SymbolList* ls) {
     Symbol* trav = ls->HEAD_SYMBOL;
@@ -826,6 +951,7 @@ void printSymbolList(SymbolList* ls) {
         trav = trav->next;
     }
 }
+
 //Utility function to print a rule
 void printRule(Rule* r) {
 
@@ -839,6 +965,8 @@ void printRule(Rule* r) {
 
     printf("\n");
 }
+
+
 // Utility function to print the grammar structure
 void printGrammarStructure() {
     for(int i=0; i < g->GRAMMAR_RULES_SIZE; i++) {
@@ -854,6 +982,7 @@ void printNonTerminalRuleRecords() {
         printf("Rules for Non terminal %s start from %d and end at %d\n" ,NonTerminalID[i],temp->start,temp->end);
     }
 }
+
 // Utility function to print the first set
 void printFirstSets(FirstAndFollow* fafl) {
     int** firstVector = fafl->FIRST;

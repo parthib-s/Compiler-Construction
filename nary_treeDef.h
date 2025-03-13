@@ -3,7 +3,6 @@
 
 #include "lexerDef.h"
 #include "parserDef.h"
-#include "astDef.h"
 
 typedef struct NaryTreeNode NaryTreeNode;
 
@@ -16,7 +15,7 @@ typedef struct NonLeafNode {
 
 typedef struct LeafNode {
     int ENUM_ID;
-    Token* TK; // This field will be populated when the input is being parsed
+    tokenInfo TK; // This field will be populated when the input is being parsed
 } LeafNode;
 
 typedef union NodeType {

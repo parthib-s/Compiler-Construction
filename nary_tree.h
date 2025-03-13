@@ -1,3 +1,5 @@
+#ifndef NARY_TREE 
+#define NARY_TREE
 #include "nary_treeDef.h"
 
 ParseTree* initialiseParseTree();
@@ -10,3 +12,5 @@ void printNaryTree(NaryTreeNode* nt);
 
 int getParseTreeNodeCount();
 int getParseTreeMemory();
+
+#endif
