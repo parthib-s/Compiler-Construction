@@ -629,19 +629,20 @@ ParseTree* parseInputSourceCode(char *testcaseFile, ParsingTable* pTable, FirstA
 
     syntaxErrorFlag = 0;
     lexicalErrorFlag = 0;
-    tokenInfo missedToken;
-    initializeToken(&missedToken);
-    tokenInfo inputToken = getNextToken();
+    tokenInfo* missedToken = NULL;
+    tokenInfo tokenTemp = getNextToken();
+    tokenInfo* inputToken = &tokenTemp;
     // Keep continuinng till the lexer return NULL, which means that the input is exhausted
     while(1) {
 
         // Break if the input has exhausted
-        if(inputToken.TOKEN_NAME == TK_UNKNOWN)
+        if(inputToken == NULL)
             break;
 
         // If token is a comment continue process
         if(inputToken->TOKEN_NAME == TK_COMMENT) {
-            inputToken = getToken();
+            tokenInfo tokenTemp1 = getNextToken();
+            inputToken = &tokenTemp1;
             continue;
         }
 
@@ -672,7 +673,8 @@ ParseTree* parseInputSourceCode(char *testcaseFile, ParsingTable* pTable, FirstA
                 stackTop->NODE_TYPE.L.TK->VALUE = inputToken->VALUE;
 
                 pop(st);
-                inputToken = getToken();
+                tokenInfo tokentemp2 = getNextToken();
+                inputToken = &tokentemp2;
                 continue;
             }
             else {
@@ -698,7 +700,8 @@ ParseTree* parseInputSourceCode(char *testcaseFile, ParsingTable* pTable, FirstA
                     stackTop->NODE_TYPE.L.TK->TOKEN_NAME = stackTop->NODE_TYPE.L.ENUM_ID;
                     stackTop->NODE_TYPE.L.TK->IS_NUMBER = 0;
                     stackTop->NODE_TYPE.L.TK->VALUE = NULL;
-                    inputToken = getToken();
+                    tokenInfo tokenTemp3 = getNextToken();
+                    inputToken = &tokenTemp3;
                     pop(st);
                 }
                 // Othwerwise assume that the token was missed
@@ -747,8 +750,9 @@ ParseTree* parseInputSourceCode(char *testcaseFile, ParsingTable* pTable, FirstA
 
                 // If input token is TK_ERR, skip and get the next token
                 if(inputToken->TOKEN_NAME == TK_ERR) {
+                    tokenInfo tokenTemp4 = getNextToken();
                     // printf("Token causing parsing issue is a lexical error , move input ahead! \n");
-                    inputToken = getToken();
+                    inputToken = &tokenTemp4;
                     continue;
                 }
 
@@ -766,7 +770,8 @@ ParseTree* parseInputSourceCode(char *testcaseFile, ParsingTable* pTable, FirstA
                 // Use the follow set of the stackTop to synchronize
                 while(inputToken != NULL && fafl->FOLLOW[stackTop->NODE_TYPE.NL.ENUM_ID][inputToken->TOKEN_NAME] == 0) {
                     // printf("Ignoring Token %s\n" , getTerminal(inputToken->TOKEN_NAME));
-                    inputToken = getToken();
+                    tokenInfo tokenTemp5 = getNextToken();
+                    inputToken = &tokenTemp5;
                 }
 
                 // If the input gets depleted then break
