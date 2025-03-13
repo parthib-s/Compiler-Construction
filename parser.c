@@ -629,8 +629,8 @@ ParseTree* parseInputSourceCode(char *testcaseFile, ParsingTable* pTable, FirstA
 
     syntaxErrorFlag = 0;
     lexicalErrorFlag = 0;
-    Token* missedToken = NULL;
-    Token* inputToken = getToken();
+    tokenInfo* missedToken = NULL;
+    tokenInfo* inputToken = getToken();
     // Keep continuinng till the lexer return NULL, which means that the input is exhausted
     while(1) {
 
@@ -663,7 +663,7 @@ ParseTree* parseInputSourceCode(char *testcaseFile, ParsingTable* pTable, FirstA
             if(inputToken->TOKEN_NAME == stackTop->NODE_TYPE.L.ENUM_ID) {
 
                 // Populate the parse tree field
-                stackTop->NODE_TYPE.L.TK = (Token*)malloc(sizeof(Token));
+                stackTop->NODE_TYPE.L.TK = (tokenInfo*)malloc(sizeof(tokenInfo));
                 stackTop->NODE_TYPE.L.TK->LEXEME = copyLexeme(inputToken->LEXEME);
                 stackTop->NODE_TYPE.L.TK->LINE_NO = inputToken->LINE_NO;
                 stackTop->NODE_TYPE.L.TK->TOKEN_NAME = inputToken->TOKEN_NAME;
@@ -691,7 +691,7 @@ ParseTree* parseInputSourceCode(char *testcaseFile, ParsingTable* pTable, FirstA
                 // then consider that the error token was the one which was expected by the stack top
                 if(inputToken->TOKEN_NAME == TK_ERR) {
 
-                    stackTop->NODE_TYPE.L.TK = (Token*)malloc(sizeof(Token));
+                    stackTop->NODE_TYPE.L.TK = (tokenInfo*)malloc(sizeof(tokenInfo));
                     stackTop->NODE_TYPE.L.TK->LEXEME = inputToken->LEXEME;
                     stackTop->NODE_TYPE.L.TK->LINE_NO = inputToken->LINE_NO;
                     stackTop->NODE_TYPE.L.TK->TOKEN_NAME = stackTop->NODE_TYPE.L.ENUM_ID;
@@ -702,7 +702,7 @@ ParseTree* parseInputSourceCode(char *testcaseFile, ParsingTable* pTable, FirstA
                 }
                 // Othwerwise assume that the token was missed
                 else {
-                    stackTop->NODE_TYPE.L.TK = (Token*)malloc(sizeof(Token));
+                    stackTop->NODE_TYPE.L.TK = (tokenInfo*)malloc(sizeof(tokenInfo));
                     stackTop->NODE_TYPE.L.TK->LEXEME = "ERROR_MISSED_LEXEME";
                     stackTop->NODE_TYPE.L.TK->LINE_NO = inputToken->LINE_NO;
                     stackTop->NODE_TYPE.L.TK->TOKEN_NAME = stackTop->NODE_TYPE.L.ENUM_ID;

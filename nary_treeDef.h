@@ -15,7 +15,7 @@ typedef struct NonLeafNode {
 
 typedef struct LeafNode {
     int ENUM_ID;
-    tokenInfo TK; // This field will be populated when the input is being parsed
+    tokenInfo* TK; // This field will be populated when the input is being parsed
 } LeafNode;
 
 typedef union NodeType {
