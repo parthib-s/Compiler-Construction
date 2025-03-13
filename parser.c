@@ -15,12 +15,13 @@ Aashish Singh                               2016A7PS0683P */
 #define TOTAL_GRAMMAR_TERMINALS 56
 #define TOTAL_GRAMMAR_RULES 87 //TODO actual number of rules
 
+
 Grammar* g; // g is a record that keeps track of the Grammar
 
 NonTerminalRuleRecords** ntrr; // Mantains records of the starting rule number and ending rule number of the non terminal indicated by it's array index
 int checkIfDone[TOTAL_GRAMMAR_NONTERMINALS] = {0}; // A global structure to check if the First has been calculated for the corresponding non terminal
-int vectorSize = TOTAL_GRAMMAR_TERMINALS+1; // Calculate the size of vectors for first and follow
-
+//int vectorSize = TOTAL_GRAMMAR_TERMINALS+1; // Calculate the size of vectors for first and follow
+int vectorSize=61;
 int syntaxErrorFlag;
 int lexicalErrorFlag;
 
@@ -191,15 +192,48 @@ char* getNonTerminal(int enumId) {
     return NonTerminalID[enumId];
 }
 
+// ParsingTable* initialiseParsingTable() {
+//     ParsingTable* pt = (ParsingTable*)malloc(sizeof(ParsingTable));
+//     pt->entries = (int**)malloc(TOTAL_GRAMMAR_NONTERMINALS*sizeof(int*));
+//     for(int i=0; i < TOTAL_GRAMMAR_NONTERMINALS; i++) {
+//         // Calloc used to initialise with 0 by default, if left empty => error state
+//         pt->entries[i] = (int*)calloc(TOTAL_GRAMMAR_TERMINALS,sizeof(int));
+//     }
+//     return pt;
+// }
+
 ParsingTable* initialiseParsingTable() {
+    printf("hi");
     ParsingTable* pt = (ParsingTable*)malloc(sizeof(ParsingTable));
-    pt->entries = (int**)malloc(TOTAL_GRAMMAR_NONTERMINALS*sizeof(int*));
-    for(int i=0; i < TOTAL_GRAMMAR_NONTERMINALS; i++) {
-        // Calloc used to initialise with 0 by default, if left empty => error state
-        pt->entries[i] = (int*)calloc(TOTAL_GRAMMAR_TERMINALS,sizeof(int));
+    if (pt == NULL) {
+        printf("Memory allocation failed for ParsingTable\n");
+        return NULL;
     }
+
+    pt->entries = (int**)malloc(TOTAL_GRAMMAR_NONTERMINALS * sizeof(int*));
+    if (pt->entries == NULL) {
+        printf("Memory allocation failed for pt->entries\n");
+        free(pt); // Free the allocated memory to prevent leaks
+        return NULL;
+    }
+
+    for (int i = 0; i < TOTAL_GRAMMAR_NONTERMINALS; i++) {
+        pt->entries[i] = (int*)calloc(TOTAL_GRAMMAR_TERMINALS, sizeof(int));
+        if (pt->entries[i] == NULL) {
+            printf("Memory allocation failed for pt->entries[%d]\n", i);
+            // Free all previously allocated memory to prevent leaks
+            for (int j = 0; j < i; j++) {
+                free(pt->entries[j]);
+            }
+            free(pt->entries);
+            free(pt);
+            return NULL;
+        }
+    }
+
     return pt;
 }
+
 
 // initialise the Grammar according to the number of non terminals and total rules
 int initialiseGrammar() {
@@ -260,22 +294,50 @@ void initialiseCheckIfDone() {
         checkIfDone[i] = 0;
 }
 
+// FirstAndFollow* initialiseFirstAndFollow() {
+//     FirstAndFollow* fafl = (FirstAndFollow*)malloc(sizeof(FirstAndFollow));
+
+//     // Initialize the array of vectors to be equal to the total number of Non terminals
+//     fafl->FIRST = (int**)malloc(sizeof(int*)*TOTAL_GRAMMAR_NONTERMINALS);
+//     fafl->FOLLOW = (int**)malloc(sizeof(int*)*TOTAL_GRAMMAR_NONTERMINALS);
+
+
+//     for(int i=0; i < TOTAL_GRAMMAR_NONTERMINALS; i++) {
+//         // Calloc used to initialize the vectors to 0
+//         fafl->FIRST[i] = (int*)calloc(vectorSize,sizeof(int));
+//         fafl->FOLLOW[i] = (int*)calloc(vectorSize,sizeof(int));
+//     }
+
+//     return fafl;
+
+// }
+
 FirstAndFollow* initialiseFirstAndFollow() {
     FirstAndFollow* fafl = (FirstAndFollow*)malloc(sizeof(FirstAndFollow));
+    if (!fafl) {
+        printf("Memory allocation failed for FirstAndFollow struct\n");
+        exit(1);
+    }
 
-    // Initialize the array of vectors to be equal to the total number of Non terminals
-    fafl->FIRST = (int**)malloc(sizeof(int*)*TOTAL_GRAMMAR_NONTERMINALS);
-    fafl->FOLLOW = (int**)malloc(sizeof(int*)*TOTAL_GRAMMAR_NONTERMINALS);
+    fafl->FIRST = (int**)malloc(sizeof(int*) * TOTAL_GRAMMAR_NONTERMINALS);
+    fafl->FOLLOW = (int**)malloc(sizeof(int*) * TOTAL_GRAMMAR_NONTERMINALS);
 
+    if (!fafl->FIRST || !fafl->FOLLOW) {
+        printf("Memory allocation failed for FIRST or FOLLOW\n");
+        exit(1);
+    }
 
-    for(int i=0; i < TOTAL_GRAMMAR_NONTERMINALS; i++) {
-        // Calloc used to initialize the vectors to 0
-        fafl->FIRST[i] = (int*)calloc(vectorSize,sizeof(int));
-        fafl->FOLLOW[i] = (int*)calloc(vectorSize,sizeof(int));
+    for (int i = 0; i < TOTAL_GRAMMAR_NONTERMINALS; i++) {
+        fafl->FIRST[i] = (int*)calloc(vectorSize, sizeof(int));
+        fafl->FOLLOW[i] = (int*)calloc(vectorSize, sizeof(int));
+
+        if (!fafl->FIRST[i] || !fafl->FOLLOW[i]) {
+            printf("Memory allocation failed for FIRST or FOLLOW rows\n");
+            exit(1);
+        }
     }
 
     return fafl;
-
 }
 
 // Calculates the First of the Symbol s and it's corresponding bit vector is populated by using the enum_id
@@ -337,17 +399,25 @@ void calculateFirst(int** firstVector, int enumId) {
 
 }
 
+// void populateFirst(int** firstVector, Grammar* g) {
+
+//     // Traversal is done by enum_id (which is iterator i in this case)
+//     // Grammar Rules are written in GRAMMAR_FILE in the same order as enum name as per convention
+
+//     for(int i=0; i < TOTAL_GRAMMAR_NONTERMINALS; i++) {
+//         if(checkIfDone[i] == 0)
+//             calculateFirst(firstVector,i);
+//     }
+// }
+
 void populateFirst(int** firstVector, Grammar* g) {
-
-    // Traversal is done by enum_id (which is iterator i in this case)
-    // Grammar Rules are written in GRAMMAR_FILE in the same order as enum name as per convention
-
-    for(int i=0; i < TOTAL_GRAMMAR_NONTERMINALS; i++) {
-        if(checkIfDone[i] == 0)
-            calculateFirst(firstVector,i);
+    for (int i = 0; i < TOTAL_GRAMMAR_NONTERMINALS; i++) {
+        if (checkIfDone[i] == 0) {
+            // Implement calculateFirst properly
+            // calculateFirst(firstVector, i, g);
+        }
     }
 }
-
 void populateFollow(int** followVector, int** firstVector, Grammar* g) {
 
 
@@ -395,39 +465,91 @@ void populateFollow(int** followVector, int** firstVector, Grammar* g) {
 }
 
 // Function to keep populating the followVector until it stabilises
-void populateFollowTillStable(int** followVector, int** firstVector, Grammar* g) {
-    int** prevFollowVector = (int**)malloc(TOTAL_GRAMMAR_NONTERMINALS*sizeof(int*));
+// void populateFollowTillStable(int** followVector, int** firstVector, Grammar* g) {
+//     int** prevFollowVector = (int**)malloc(TOTAL_GRAMMAR_NONTERMINALS*sizeof(int*));
 
-    for(int i=0; i < TOTAL_GRAMMAR_NONTERMINALS; i++) {
-        prevFollowVector[i] = (int*)calloc(vectorSize,sizeof(int));
+//     for(int i=0; i < TOTAL_GRAMMAR_NONTERMINALS; i++) {
+//         prevFollowVector[i] = (int*)calloc(vectorSize,sizeof(int));
+//     }
+
+//     followVector[program][TK_DOLLAR] = 1;
+//     prevFollowVector[program][TK_DOLLAR] = 1;
+
+//     while(1) {
+
+//         populateFollow(followVector,firstVector,g);
+//         int stable = 1;
+
+//         for(int i=0; i < TOTAL_GRAMMAR_NONTERMINALS; i++) {
+//             for(int j=0; j < vectorSize; j++) {
+//                 if(prevFollowVector[i][j] != followVector[i][j])
+//                     stable = 0;
+//             }
+//         }
+
+//         if(stable)
+//             break;
+
+//         for(int i=0; i < TOTAL_GRAMMAR_NONTERMINALS; i++) {
+//             for(int j=0; j < vectorSize; j++)
+//                 prevFollowVector[i][j] = followVector[i][j];
+//         }
+//     }
+// }
+
+void populateFollowTillStable(int** followVector, int** firstVector, Grammar* g) {
+    int** prevFollowVector = (int**)malloc(TOTAL_GRAMMAR_NONTERMINALS * sizeof(int*));
+    if (!prevFollowVector) {
+        printf("Memory allocation failed for prevFollowVector\n");
+        exit(1);
+    }
+
+    for (int i = 0; i < TOTAL_GRAMMAR_NONTERMINALS; i++) {
+        prevFollowVector[i] = (int*)calloc(vectorSize, sizeof(int));
+        if (!prevFollowVector[i]) {
+            printf("Memory allocation failed for prevFollowVector rows\n");
+            exit(1);
+        }
+    }
+    printf("Debug Info:\n");
+    printf("program: %d, TOTAL_GRAMMAR_NONTERMINALS: %d\n", program, TOTAL_GRAMMAR_NONTERMINALS);
+    printf("TK_DOLLAR: %d, vectorSize: %d\n", TK_DOLLAR, vectorSize);    if (program < 0 || program >= TOTAL_GRAMMAR_NONTERMINALS) {
+        printf("Error: program index is out of range!\n");
+        exit(1);
+    }
+
+    if (program >= TOTAL_GRAMMAR_NONTERMINALS || TK_DOLLAR >= vectorSize) {
+        printf("Invalid index for program or TK_DOLLAR\n");
+        exit(1);
     }
 
     followVector[program][TK_DOLLAR] = 1;
     prevFollowVector[program][TK_DOLLAR] = 1;
 
-    while(1) {
-
-        populateFollow(followVector,firstVector,g);
+    while (1) {
+        populateFollow(followVector, firstVector, g);
         int stable = 1;
 
-        for(int i=0; i < TOTAL_GRAMMAR_NONTERMINALS; i++) {
-            for(int j=0; j < vectorSize; j++) {
-                if(prevFollowVector[i][j] != followVector[i][j])
+        for (int i = 0; i < TOTAL_GRAMMAR_NONTERMINALS; i++) {
+            for (int j = 0; j < vectorSize; j++) {
+                if (prevFollowVector[i][j] != followVector[i][j]) {
                     stable = 0;
+                }
             }
         }
 
-        if(stable)
-            break;
+        if (stable) break;
 
-        for(int i=0; i < TOTAL_GRAMMAR_NONTERMINALS; i++) {
-            for(int j=0; j < vectorSize; j++)
-                prevFollowVector[i][j] = followVector[i][j];
+        for (int i = 0; i < TOTAL_GRAMMAR_NONTERMINALS; i++) {
+            memcpy(prevFollowVector[i], followVector[i], vectorSize * sizeof(int));
         }
     }
+
+    for (int i = 0; i < TOTAL_GRAMMAR_NONTERMINALS; i++) {
+        free(prevFollowVector[i]);
+    }
+    free(prevFollowVector);
 }
-
-
 FirstAndFollow* computeFirstAndFollowSets(Grammar* g) {
     FirstAndFollow* fafl = initialiseFirstAndFollow();
     populateFirst(fafl->FIRST,g);
@@ -631,7 +753,9 @@ ParseTree* parseInputSourceCode(char *testcaseFile, ParsingTable* pTable, FirstA
     lexicalErrorFlag = 0;
     tokenInfo* missedToken = NULL;
     tokenInfo tokenTemp = getNextToken();
-    tokenInfo* inputToken = &tokenTemp;
+    tokenInfo* inputToken = (tokenInfo*)malloc(sizeof(tokenInfo));
+    *inputToken = getNextToken();
+
     // Keep continuinng till the lexer return NULL, which means that the input is exhausted
     while(1) {
 

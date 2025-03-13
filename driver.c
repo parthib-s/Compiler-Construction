@@ -135,10 +135,13 @@ int main(int argc, char* argv[]) {
                 fclose(fp);
                 break;
             
-            case 3:
+            /*case 3:
                 // Initialize the parser and lexer
+                printf("hi");
+
                 int fd = open(argv[1], O_RDONLY);
                 ParsingTable* pTable = initialiseParsingTable();
+                printf("hi");
                 FirstAndFollow* fafl = computeFirstAndFollowSets(extractGrammar());
                 createParseTable(fafl, pTable);
             
@@ -164,6 +167,30 @@ int main(int argc, char* argv[]) {
                 //     printf("Parsing successful.\n");
                 // }
             
+                break;
+            */
+            case 3:
+                printf("Commencing parsing of input source code \n");
+                printf("--------\n");
+
+                Grammar* g = extractGrammar();
+
+                FirstAndFollow* fafl = computeFirstAndFollowSets(g);
+                printf("Commencin\n");
+
+                ParsingTable* pTable = initialiseParsingTable();
+                printf("Commencin88888\n");
+
+                createParseTable(fafl,pTable);
+                printf("Commencin88887788\n");
+
+                // Lexer and parser are both invoked inside parseInputSourceCode
+                ParseTree* pt = parseInputSourceCode(argv[1],pTable,fafl);
+                printf("Commencin88887788444\n");
+
+                printParseTree(pt,NULL);
+
+                printf("\nFinished parsing of input source code \n");
                 break;
             // case 4:
             //     clock_t start_time = clock();
