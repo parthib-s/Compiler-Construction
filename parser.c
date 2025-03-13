@@ -715,8 +715,6 @@ ParseTree* parseInputSourceCode(char *testcaseFile, ParsingTable* pTable, FirstA
                     missedToken = inputToken;
                     pop(st);
                 }
-
-
                 continue;
 
             }

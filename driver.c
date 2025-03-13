@@ -3,7 +3,14 @@
 #include <string.h>
 #include <time.h>
 #include "lexer.h"
+#include <fcntl.h>
+#include <unistd.h>   // For close(), read(), write()
+#include <sys/types.h> // For data types like off_t
+#include <sys/stat.h>  // For file permissions
+#include "parser.h"
 //#include "parser.h"
+#include "interface.h"
+#include "parserDef.h"
 
 const char* TokenNameStrings[] = {
     "TK_UNKNOWN",
@@ -89,7 +96,7 @@ int main(int argc, char* argv[]) {
         printf("0. Exit\n");
         printf("1. Remove comments\n");
         printf("2. Print token list\n");
-        // printf("3. Parse code and print parse tree\n");
+        printf("3. Parse code and print parse tree\n");
         // printf("4. Measure execution time\n");
         // printf("Enter your choice: ");
         scanf("%d", &choice);
@@ -128,38 +135,36 @@ int main(int argc, char* argv[]) {
                 fclose(fp);
                 break;
             
-            // case 3:
-            //     // Initialize the parser and lexer
-            //     int fd = open(argv[1], O_RDONLY);
-            //     ParsingTable* pTable = initialiseParsingTable();
-            //     FirstAndFollow* fafl = computeFirstAndFollowSets(extractGrammar());
-            //     createParseTable(fafl, pTable);
+            case 3:
+                // Initialize the parser and lexer
+                int fd = open(argv[1], O_RDONLY);
+                ParsingTable* pTable = initialiseParsingTable();
+                FirstAndFollow* fafl = computeFirstAndFollowSets(extractGrammar());
+                createParseTable(fafl, pTable);
             
-            //     // Parse the input source code
-            //     ParseTree* pt = parseInputSourceCode(argv[1], pTable, fafl);
+                // Parse the input source code
+                ParseTree* pt = parseInputSourceCode(argv[1], pTable, fafl);
             
-            //     // Print the parse tree to the specified output file
-            //     FILE* outputFile = fopen(argv[2], "w");
-            //     if (outputFile == NULL) {
-            //         printf("Error opening output file %s\n", argv[2]);
-            //         break;
-            //     }
+                // Print the parse tree to the specified output file
+                FILE* outputFile = fopen(argv[2], "w");
+                if (outputFile == NULL) {
+                    printf("Error opening output file %s\n", argv[2]);
+                    break;
+                }
             
-            //     // Assuming you have a function to print the parse tree
-            //     printParseTree(pt, outputFile);
+                // Assuming you have a function to print the parse tree
+                printParseTree(pt, outputFile);
             
-            //     fclose(outputFile);
+                fclose(outputFile);
             
-            //     // Check for errors
-            //     if (lexicalErrorFlag || syntaxErrorFlag) {
-            //         printf("Errors encountered during parsing.\n");
-            //     } else {
-            //         printf("Parsing successful.\n");
-            //     }
+                // Check for errors
+                // if (lexicalErrorFlag || syntaxErrorFlag) {
+                //     printf("Errors encountered during parsing.\n");
+                // } else {
+                //     printf("Parsing successful.\n");
+                // }
             
-            //     break;
-            
-            //     break;
+                break;
             // case 4:
             //     clock_t start_time = clock();
             
