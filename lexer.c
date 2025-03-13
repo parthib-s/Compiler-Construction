@@ -12,6 +12,7 @@ int num_of_rounds=0;
 int line_no=0;
 int state=0;
 int retraction_flag=0;
+int done = 0;
 twinBuffer* B;
 
 
@@ -262,7 +263,6 @@ tokenInfo getNextToken()
     int state = 0; // DFA initial state
     char c;
     int errorType = 0;
-
     // Clear the lexeme buffer.
     tokenInfo token;
     initializeToken(&token);
@@ -279,7 +279,13 @@ tokenInfo getNextToken()
     // DFA processing loop.
     while (1)
     {
-        if(c == EOF){
+        if(c == EOF && done == 0){
+            token = createToken(TK_END,"end",B->lineNumber,0,NULL);
+            done = 1;
+            return token;
+            break;
+        }
+        else if(done == 1){
             return token;
             break;
         }
