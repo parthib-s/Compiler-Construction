@@ -64,7 +64,9 @@ const char* TokenNameStrings[] = {
     "TK_GT",
     "TK_GE",
     "TK_NE",
-    "TK_ERR"
+    "TK_ERR",
+    "TK_EPS",
+    "TK_DOLLAR"
 };
 const char *getTokenNameString(TokenName token) {
     return TokenNameStrings[token];

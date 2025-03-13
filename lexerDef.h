@@ -72,7 +72,9 @@ typedef enum TokenName {
     TK_GT,
     TK_GE,
     TK_NE,
-    TK_ERR
+    TK_ERR,
+    TK_EPS,
+    TK_DOLLAR
 } TokenName;
 
 

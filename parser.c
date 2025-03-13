@@ -629,13 +629,14 @@ ParseTree* parseInputSourceCode(char *testcaseFile, ParsingTable* pTable, FirstA
 
     syntaxErrorFlag = 0;
     lexicalErrorFlag = 0;
-    tokenInfo* missedToken = NULL;
-    tokenInfo* inputToken = getToken();
+    tokenInfo missedToken;
+    initializeToken(&missedToken);
+    tokenInfo inputToken = getNextToken();
     // Keep continuinng till the lexer return NULL, which means that the input is exhausted
     while(1) {
 
         // Break if the input has exhausted
-        if(inputToken == NULL)
+        if(inputToken.TOKEN_NAME == TK_UNKNOWN)
             break;
 
         // If token is a comment continue process
