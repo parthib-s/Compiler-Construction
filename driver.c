@@ -174,15 +174,16 @@ int main(int argc, char* argv[]) {
                 printf("--------\n");
 
                 Grammar* g = extractGrammar();
+                //printf("HERE\n");
 
                 FirstAndFollow* fafl = computeFirstAndFollowSets(g);
-                printf("Commencin\n");
+                //printf("Commencin\n");
 
                 ParsingTable* pTable = initialiseParsingTable();
-                printf("Commencin88888\n");
+                //printf("Commencin88888\n");
 
                 createParseTable(fafl,pTable);
-                printf("Commencin88887788\n");
+                //printf("Commencin88887788\n");
 
                 // Lexer and parser are both invoked inside parseInputSourceCode
                 ParseTree* pt = parseInputSourceCode(argv[1],pTable,fafl);

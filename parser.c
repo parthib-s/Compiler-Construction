@@ -10,7 +10,7 @@ Aashish Singh                               2016A7PS0683P */
 #include "nary_tree.h"
 #include "stack.h"
 #include <string.h>
-#define GRAMMAR_FILE "GRAMMAR.txt"
+#define GRAMMAR_FILE "grammar.txt"
 #define TOTAL_GRAMMAR_NONTERMINALS 49 // TODO get the actual number of nonterminals
 #define TOTAL_GRAMMAR_TERMINALS 56
 #define TOTAL_GRAMMAR_RULES 87 //TODO actual number of rules
@@ -653,7 +653,7 @@ void addToSymbolList(SymbolList* ls, Symbol* s) {
 //  => Keep making the Symbol List
 //  => Extract the enum number of the LHS Non terminal.
 Grammar* extractGrammar() {
-
+    //printf("HERE\n");
     int ruleCount = 1; // Variable which will be used in assigning the rule numbers to the extracted rules
     int fd = open(GRAMMAR_FILE,O_RDONLY);
     char c; // Variable to store the character being read
@@ -670,14 +670,14 @@ Grammar* extractGrammar() {
     initialiseCheckIfDone();
 
     //create starting symbol list
-
+    //printf("HERE\n");
     while((actualRead = read(fd,&c,sizeof(char))) != 0) {
 
         // If end of file is reached stop reading further
         if(c == EOF) {
             break;
         }
-
+        //printf("%c\n",c);
         // If a space is reached, it means a symbol has terminated and hence must be extracted
         if(c == ' ') {
             symbolsRead++;
@@ -739,10 +739,11 @@ Grammar* extractGrammar() {
 
 // Function which parses the input from the testCaseFile
 ParseTree* parseInputSourceCode(char *testcaseFile, ParsingTable* pTable, FirstAndFollow* fafl) {
-
+    //printf("HERE\n");
     int f = open(testcaseFile,O_RDONLY);
+    FILE* fp = fopen(testcaseFile,"r");
 
-    initializeLexer(f);
+    initializeLexer(fp);
     ParseTree* pt = initialiseParseTree();
     Stack* st = initialiseStack(pt);
 
@@ -751,6 +752,7 @@ ParseTree* parseInputSourceCode(char *testcaseFile, ParsingTable* pTable, FirstA
 
     syntaxErrorFlag = 0;
     lexicalErrorFlag = 0;
+
     tokenInfo* missedToken = NULL;
     tokenInfo tokenTemp = getNextToken();
     tokenInfo* inputToken = (tokenInfo*)malloc(sizeof(tokenInfo));
