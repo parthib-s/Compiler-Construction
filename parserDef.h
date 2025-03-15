@@ -4,6 +4,7 @@
 #define NUM_TERMINALS 61
 #define NUM_NON_TERMINALS 53
 #define MAX_PRODUCTIONS 200
+#include "lexerDef.h"
 
 
 typedef struct ParseTreeNode {
@@ -19,11 +20,6 @@ typedef struct {
     int rhsCount;
 } Production;
 
-typedef struct {
-    ParseTreeNode **nodes;
-    int top;
-    int capacity;
-} Stack;
 
 // Global FOLLOW structure: each row corresponds to a nonterminal and each column to a terminal.
 typedef struct {

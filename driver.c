@@ -83,10 +83,9 @@ int main(int argc, char* argv[]) {
         printf("Usage: %s input_file output_file\n", argv[0]);
         return 1;
     }
-
+    FILE* fp;
     printf("Implementation Status: Both lexical and syntax analysis modules implemented.\n");
-    FILE* fp = fopen(argv[1],"r");
-    initializeLexer(fp);
+    
     int choice;
     //initializeLexer();
     while (1) {
@@ -105,6 +104,8 @@ int main(int argc, char* argv[]) {
                 return 0;
             case 1:
                 //printf("HERE!!!\n");
+                fp = fopen(argv[1],"r");
+                initializeLexer(fp);
                 char cleanFile[256];
                 sprintf(cleanFile, argv[2], argv[1]);
                 
@@ -112,6 +113,8 @@ int main(int argc, char* argv[]) {
                 printf("Comments removed and saved to %s\n", argv[2]);
                 break;
             case 2:
+                fp = fopen(argv[1],"r");
+                initializeLexer(fp);
                 if (fp == NULL) {
                     printf("Could not open file %s\n", argv[1]);
                     break;
@@ -226,6 +229,8 @@ int main(int argc, char* argv[]) {
             
             //     break;
             case 3: 
+                fp = fopen(argv[1],"r");
+                initializeLexer(fp);
                 initParser("grammar.txt");
                 while(1){
                     token = getNextToken();
@@ -238,6 +243,8 @@ int main(int argc, char* argv[]) {
                 }
                 break;
             case 4:
+                fp = fopen(argv[1],"r");
+                initializeLexer(fp);
                 clock_t start_time, end_time;
 
                 double total_CPU_time, total_CPU_time_in_seconds;
