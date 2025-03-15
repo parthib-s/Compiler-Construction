@@ -1,67 +1,105 @@
-#include "interface.h"
-#include "stackDef.h"
-#include "nary_tree.h"
+/* 
+ * Group 08
+ * Shubham Lather		2016A7PS0006P
+ * Devyash Parihar		2016A7PS0066P
+ * Rahul Khandelwal		2016A7PS0128P
+ * Aniruddha Karve		2016A7PS0042P
+ */
 
-StackNode* createStackNode(NaryTreeNode* ntn) {
-    StackNode* stn = (StackNode*)malloc(sizeof(StackNode));
-    stn->TREE_NODE = ntn;
-    stn->next = NULL;
-    return stn;
-}
+ #include "Stack.h"
 
-NaryTreeNode* top(Stack* st) {
-    if(st->HEAD == NULL)
-        return NULL;
-    else
-        return st->HEAD->TREE_NODE;
-}
 
-void push(Stack* st,NaryTreeNode* ntn) {
-    StackNode* stn = createStackNode(ntn);
-    StackNode* head = st->HEAD;
-
-    // Case when stack is empty
-    if(head == NULL) {
-        st->HEAD = stn;
-        st->NUM_NODES++;
-        return;
-    }
-
-    stn->next = head;
-    st->HEAD = stn;
-    st->NUM_NODES++;
-    return;
-}
-
-void pop(Stack* st) {
-    StackNode* head = st->HEAD;
-
-    // Case when stack is already empty
-    if(head == NULL)
-        return;
-
-    st->HEAD = st->HEAD->next;
-    st->NUM_NODES--;
-}
-
-// Function recursively pushes children on the stack
-void pushTreeChildren(Stack* st,NaryTreeNode* ntn) {
-    if(ntn == NULL)
-        return;
-    pushTreeChildren(st,ntn->next);
-    push(st,ntn);
-}
-
-// Initialise the stack with TK_DOLLAr as the end and program as the startting non terminal
-Stack* initialiseStack(ParseTree* pt) {
-    Stack* st = (Stack*)malloc(sizeof(Stack));
-    st->HEAD = NULL;
-    st->NUM_NODES = 0;
-
-    SymbolType sType;
-    sType.TERMINAL = TK_DOLLAR;
-    NaryTreeNode* ntn = createNode(1,sType,NULL);
-    push(st,ntn);
-    push(st,pt->root);
-    return st;
-}
+ Stack newStack(){
+     Stack s = malloc(sizeof( struct stack));
+     s->head = NULL;
+     s->tail = NULL;
+     s->count = 0;
+     return s;
+ }
+ 
+ 
+ void insert_at_front(Stack s, Element e){
+     if(s->count == 0){
+         s->head = e;
+         s->tail=e;
+         e->next = NULL;
+         s->count++;
+     }
+     else{
+         e->next = s->head;
+         s->head= e;
+         s->count++;
+     }
+ }
+ void insert_at_end(Stack s, Element e){
+     if(s->count == 0){
+         s->head = e;
+         s->tail=e;
+         e->next = NULL;
+         s->count++;
+     }
+     else{
+         s->tail->next = e;
+         s->tail=e;
+         e->next = NULL;
+         s->count++;
+     }
+ }
+ 
+ void delete_at_front(Stack s){
+     if(s->count == 0){
+         printf("empty stack\n");
+     }
+     else if(s->count == 1){
+         Element curr = s->head;
+         s->head = NULL;
+         s->tail = NULL;
+         free(curr);
+         s->count = 0;
+     }
+     else if(s->count > 1){
+         Element enext = s->head->next;
+         Element curr = s->head;
+         s->head = enext;
+         curr->next = NULL;
+         free(curr);
+         s->count--;
+     }
+ }
+ 
+ Key top1(Stack s){
+     if(s->head != NULL){return s->head->k;}
+     else{
+         printf("Empty Stack\n");
+         return NULL;
+     }
+ }
+ 
+         
+ Element newElement(Key k)
+ {
+     Element a = malloc(sizeof(struct element));
+     a->k = k;
+     a->next=NULL;
+     return a;
+ 
+ }		   
+ 
+ Key newKey(int id, parseTree pt){
+     Key k = malloc(sizeof(struct key));
+     (k)->id = id;
+     (k)->parent = pt;
+     return k;
+ }
+         
+ void push(Stack s, int id, parseTree pt){
+     Key key = newKey(id, pt);
+     Element e = newElement(key);
+     insert_at_front(s, e);
+ }
+ 
+ void pop(Stack s){
+     delete_at_front(s);
+ }		
+             
+         

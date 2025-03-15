@@ -169,42 +169,42 @@ int main(int argc, char* argv[]) {
             
                 break;
             */
-            case 3:
-                printf("Commencing parsing of input source code \n");
-                printf("--------\n");
+            // case 3:
+            //     printf("Commencing parsing of input source code \n");
+            //     printf("--------\n");
 
-                Grammar* g = extractGrammar();
-                //printf("HERE\n");
+            //     Grammar* g = extractGrammar();
+            //     printf("HERE\n");
 
-                FirstAndFollow* fafl = computeFirstAndFollowSets(g);
-                //printf("Commencin\n");
+            //     FirstAndFollow* fafl = computeFirstAndFollowSets(g);
+            //     //printf("Commencin\n");
 
-                ParsingTable* pTable = initialiseParsingTable();
-                //printf("Commencin88888\n");
+            //     ParsingTable* pTable = initialiseParsingTable();
+            //     //printf("Commencin88888\n");
 
-                createParseTable(fafl,pTable);
-                //printf("Commencin88887788\n");
+            //     createParseTable(fafl,pTable);
+            //     //printf("Commencin88887788\n");
 
-                // Lexer and parser are both invoked inside parseInputSourceCode
-                ParseTree* pt = parseInputSourceCode(argv[1],pTable,fafl);
-                printf("Commencin88887788444\n");
+            //     // Lexer and parser are both invoked inside parseInputSourceCode
+            //     ParseTree* pt = parseInputSourceCode(argv[1],pTable,fafl);
+            //     printf("Commencin88887788444\n");
 
-                printParseTree(pt,NULL);
+            //     printParseTree(pt,NULL);
 
-                printf("\nFinished parsing of input source code \n");
-                break;
-            // case 4:
-            //     clock_t start_time = clock();
+            //     printf("\nFinished parsing of input source code \n");
+            //     break;
+            // // case 4:
+            // //     clock_t start_time = clock();
             
-            //     // Call the parser function here (assuming it's named parseInputSourceCode)
-            //     // This will invoke both lexer and parser.
-            //     FILE* fp = fopen(argv[1], "r");
-            //     if (fp == NULL) {
-            //         printf("Could not open file %s\n", argv[1]);
-            //         break;
-            //     }
+            // //     // Call the parser function here (assuming it's named parseInputSourceCode)
+            // //     // This will invoke both lexer and parser.
+            // //     FILE* fp = fopen(argv[1], "r");
+            // //     if (fp == NULL) {
+            // //         printf("Could not open file %s\n", argv[1]);
+            // //         break;
+            // //     }
             
-            //     twinBuffer B;
+            // //     twinBuffer B;
             //     getStream(fp);
             
             //     // Assuming you have a parser function named parseInputSourceCode
