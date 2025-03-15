@@ -225,7 +225,8 @@ int main(int argc, char* argv[]) {
             
             //     break;
             case 3: 
-                initParser();
+                initParser(argv[1]);
+                break;
             default:
                 printf("Invalid choice. Please try again.\n");
                 break;
