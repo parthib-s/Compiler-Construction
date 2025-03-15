@@ -1,5 +1,5 @@
 parser: parser.o lexer.o driver.o keyword_table.o 
-	gcc parser.o lexer.o driver.o keyword_table.o -o myfinalprogram
+	gcc parser.o lexer.o driver.o keyword_table.o -o stage1exe
 
 lexer: lexer.o keyword_table.o driver.o
 	gcc lexer.o keyword_table.o driver.o -o myprogram

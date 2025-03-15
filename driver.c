@@ -95,7 +95,7 @@ int main(int argc, char* argv[]) {
         printf("1. Remove comments\n");
         printf("2. Print token list\n");
         printf("3. Parse code and print parse tree\n");
-        // printf("4. Measure execution time\n");
+        printf("4. Measure execution time\n");
         // printf("Enter your choice: ");
         scanf("%d", &choice);
         
@@ -125,6 +125,9 @@ int main(int argc, char* argv[]) {
                 while (1) {
                     //printf("HERE!!\n");
                     token = getNextToken();
+                    if(token.TOKEN_NAME == TK_ERR){
+                        printf("Line number: %d Unknown  symbol <%s>\n",token.LINE_NO,token.LEXEME);
+                    }
                     if(token.TOKEN_NAME == TK_UNKNOWN){
                         break;
                     }
@@ -224,6 +227,41 @@ int main(int argc, char* argv[]) {
             //     break;
             case 3: 
                 initParser("grammar.txt");
+                while(1){
+                    token = getNextToken();
+                    if(token.TOKEN_NAME == TK_ERR){
+                        printf("Line number: %d Unknown  symbol <%s>\n",token.LINE_NO,token.LEXEME);
+                    }
+                    if(token.TOKEN_NAME == TK_UNKNOWN){
+                        break;
+                    }
+                }
+                break;
+            case 4:
+                clock_t start_time, end_time;
+
+                double total_CPU_time, total_CPU_time_in_seconds;
+
+                start_time = clock();            
+                // Call the parser function here (assuming it's named parseInputSourceCode)
+                // This will invoke both lexer and parser.
+                FILE* fp = fopen(argv[1], "r");
+                if (fp == NULL) {
+                    printf("Could not open file %s\n", argv[1]);
+                    break;
+                }
+                
+                // invoke your lexer and parser here
+                initParser("grammar.txt");
+                initializeLexer(fp);
+                end_time = clock();
+
+                total_CPU_time = (double) (end_time - start_time);
+
+                total_CPU_time_in_seconds = total_CPU_time / CLOCKS_PER_SEC;
+                
+                printf("Total CPU Time: %f\n", total_CPU_time);
+                printf("Total CPU Time in Seconds: %f\n", total_CPU_time_in_seconds);
                 break;
             default:
                 printf("Invalid choice. Please try again.\n");

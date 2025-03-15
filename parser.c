@@ -4,6 +4,7 @@
 #include <ctype.h>
 #include "lexer.h"
 #include "parser.h"
+int donesd = 1;
 
 Production productions[MAX_PRODUCTIONS];
 FirstSets firstSets;
@@ -492,6 +493,9 @@ ParseTreeNode* parseInputSourceCode() {
     // Get the first token from the lexer.
     tokenInfo currToken = getNextToken();
     
+    // Define a recovery limit constant.
+    const int RECOVERY_LIMIT = 20;
+    
     while (stack->top != -1) {
         // Skip comment tokens.
         while (currToken.TOKEN_NAME == TK_COMMENT) {
@@ -510,10 +514,30 @@ ParseTreeNode* parseInputSourceCode() {
                 currToken = getNextToken();
                 continue;
             } else {
-                // Terminal mismatch: report error and return NULL.
-                printf("Line %d  Error: The token %s for lexeme %s does not match with the expected token %s\n", 
-                    currToken.LINE_NO, terminals[currToken.TOKEN_NAME], currToken.LEXEME, topNode->symbol);
-                return NULL;
+                // Terminal mismatch: print error, pop the node, and recover.
+                printf("Line %d Error: Expected %s, got %s (lexeme: %s)\n", 
+                    currToken.LINE_NO, topNode->symbol, 
+                    terminals[currToken.TOKEN_NAME], currToken.LEXEME);
+                donesd = 0;
+                pop(stack);
+                
+                // Panic mode recovery: skip tokens until expected token or TK_DOLLAR is encountered.
+                int recoveryCounter = 0;
+                int errorLine = currToken.LINE_NO;
+                while (currToken.TOKEN_NAME != expectedTermIndex &&
+                       currToken.TOKEN_NAME != TK_DOLLAR &&
+                       currToken.LINE_NO == errorLine &&
+                       recoveryCounter < RECOVERY_LIMIT) {
+                    currToken = getNextToken();
+                    recoveryCounter++;
+                }
+                // If recovery limit is reached, skip the rest of the line.
+                if (recoveryCounter >= RECOVERY_LIMIT) {
+                    while (currToken.TOKEN_NAME != TK_DOLLAR && currToken.LINE_NO == errorLine) {
+                        currToken = getNextToken();
+                    }
+                }
+                continue;
             }
         } else {
             // The top node is a nonterminal.
@@ -523,10 +547,29 @@ ParseTreeNode* parseInputSourceCode() {
             // Consult the parse table to get the production index.
             int prodIndex = parseTable[ntIndex][currTermIndex];
             if (prodIndex == -1) {
-                printf("Parse error: no production for nonterminal %s on terminal %s\n",
-                       topNode->symbol, terminals[currTermIndex]);
-                printf("Error in line number: %d\n", currToken.LINE_NO);
-                return NULL;
+                printf("Line %d Error: No production for nonterminal %s on terminal %s\n",
+                       currToken.LINE_NO, topNode->symbol, terminals[currTermIndex]);
+                donesd = 0;
+                // Panic mode recovery:
+                // If the current token is in FOLLOW(nt) then pop the nonterminal;
+                // otherwise, skip tokens until one in FOLLOW(nt) or recovery limit reached.
+                int recoveryCounter = 0;
+                int errorLine = currToken.LINE_NO;
+                while (currToken.TOKEN_NAME != TK_DOLLAR &&
+                       followSets.table[ntIndex][currToken.TOKEN_NAME] == 0 &&
+                       currToken.LINE_NO == errorLine &&
+                       recoveryCounter < RECOVERY_LIMIT) {
+                    currToken = getNextToken();
+                    recoveryCounter++;
+                }
+                if (recoveryCounter >= RECOVERY_LIMIT) {
+                    while (currToken.TOKEN_NAME != TK_DOLLAR && currToken.LINE_NO == errorLine) {
+                        currToken = getNextToken();
+                    }
+                }
+                // Once synchronized, pop the nonterminal.
+                pop(stack);
+                continue;
             }
             
             pop(stack);
@@ -536,13 +579,12 @@ ParseTreeNode* parseInputSourceCode() {
             topNode->childCount = prod.rhsCount;
             topNode->children = (ParseTreeNode**)malloc(sizeof(ParseTreeNode*) * prod.rhsCount);
             for (int i = 0; i < prod.rhsCount; i++) {
-                // Create a node for the RHS symbol.
                 ParseTreeNode* child = createNode(prod.rhs[i]);
                 topNode->children[i] = child;
             }
             
             // Push children in reverse order onto the stack.
-            // For epsilon productions (i.e. symbol "TK_EPS"), do not push them (they vanish).
+            // For epsilon productions (i.e. symbol "TK_EPS"), do not push them.
             for (int i = prod.rhsCount - 1; i >= 0; i--) {
                 if (strcmp(topNode->children[i]->symbol, "TK_EPS") == 0)
                     continue;
@@ -550,11 +592,13 @@ ParseTreeNode* parseInputSourceCode() {
             }
         }
     }
-    printf("parsing done sucessfully\n");
+    
+    printf("Parsing done successfully\n");
     free(stack->nodes);
     free(stack);
     return root;
 }
+
 
 void initParser(char * filename){
 	readGrammar(filename);
@@ -565,6 +609,9 @@ void initParser(char * filename){
     //printFollowSets();
     //printFirstSets();
     ParseTreeNode* root = parseInputSourceCode();
+    if(donesd == 0){
+        return;
+    }
 	printParseTree(root,0);
 	
 }
