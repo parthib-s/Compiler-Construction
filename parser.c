@@ -482,13 +482,14 @@ ParseTreeNode* peek(Stack* s) {
 // and uses getNextToken() to obtain tokens from the lexer.
 // It now skips tokens of type TK_COMMENT.
 ParseTreeNode* parseInputSourceCode() {
+    // Create a stack with an initial capacity.
     Stack* stack = createStack(100);
     
-    // Create the root parse tree node with the start symbol (assumed to be nonterminals[0]).
+    // Create the root parse tree node with the start symbol.
     ParseTreeNode* root = createNode(nonterminals[0]);
     push(stack, root);
     
-    // Get the first token.
+    // Get the first token from the lexer.
     tokenInfo currToken = getNextToken();
     
     while (stack->top != -1) {
@@ -502,13 +503,17 @@ ParseTreeNode* parseInputSourceCode() {
         // If the top node is a terminal.
         if (strncmp(topNode->symbol, "TK_", 3) == 0) {
             int expectedTermIndex = getTerminalIndex(topNode->symbol);
-            if(expectedTermIndex == currToken.TOKEN_NAME) {
+            if (expectedTermIndex == currToken.TOKEN_NAME) {
+                // Terminal matches: attach token info and pop the node.
                 topNode->token = currToken;
                 pop(stack);
                 currToken = getNextToken();
                 continue;
             } else {
-                printf("Parse error: expected %s, got %s\n", topNode->symbol, terminals[currToken.TOKEN_NAME]);
+                // Terminal mismatch: report error and return NULL.
+                printf("Parse error: expected %s, got %s\n", 
+                       topNode->symbol, terminals[currToken.TOKEN_NAME]);
+                printf("Error in line number: %d\n", currToken.LINE_NO);
                 return NULL;
             }
         } else {
@@ -516,32 +521,37 @@ ParseTreeNode* parseInputSourceCode() {
             int ntIndex = getNonterminalIndex(topNode->symbol);
             int currTermIndex = currToken.TOKEN_NAME;
             
-            // Use the parse table to decide production.
+            // Consult the parse table to get the production index.
             int prodIndex = parseTable[ntIndex][currTermIndex];
-            if(prodIndex == -1) {
+            if (prodIndex == -1) {
                 printf("Parse error: no production for nonterminal %s on terminal %s\n",
                        topNode->symbol, terminals[currTermIndex]);
+                printf("Error in line number: %d\n", currToken.LINE_NO);
                 return NULL;
             }
             
             pop(stack);
             Production prod = productions[prodIndex];
             
-            // Create children nodes for each RHS symbol.
+            // Create children nodes for each symbol in the production's RHS.
             topNode->childCount = prod.rhsCount;
             topNode->children = (ParseTreeNode**)malloc(sizeof(ParseTreeNode*) * prod.rhsCount);
             for (int i = 0; i < prod.rhsCount; i++) {
+                // Create a node for the RHS symbol.
                 ParseTreeNode* child = createNode(prod.rhs[i]);
                 topNode->children[i] = child;
             }
             
-            // Push children in reverse order.
+            // Push children in reverse order onto the stack.
+            // For epsilon productions (i.e. symbol "TK_EPS"), do not push them (they vanish).
             for (int i = prod.rhsCount - 1; i >= 0; i--) {
+                if (strcmp(topNode->children[i]->symbol, "TK_EPS") == 0)
+                    continue;
                 push(stack, topNode->children[i]);
             }
         }
     }
-    
+    printf("parsing done sucessfully\n");
     free(stack->nodes);
     free(stack);
     return root;
@@ -555,8 +565,39 @@ void initParser(char * filename){
     //printParseTable();
     //printFollowSets();
     //printFirstSets();
-    parseInputSourceCode();
+    ParseTreeNode* root = parseInputSourceCode();
+	printParseTree(root,0);
+	
 }
+
+// Recursively prints the parse tree with indentation.
+void printParseTree(ParseTreeNode* node, int indent) {
+    if (node == NULL) return;
+    
+    // Print indentation.
+    for (int i = 0; i < indent; i++) {
+        printf("  ");
+    }
+    
+    // Print the node's symbol.
+    printf("%s", node->symbol);
+    
+    // If this is a terminal node (we assume terminals start with "TK_"),
+    // and if it has a token lexeme, print it.
+    if (strncmp(node->symbol, "TK_", 3) == 0) {
+        if (node->token.LEXEME != NULL) {
+            printf(" (%s)", node->token.LEXEME);
+        }
+    }
+    
+    printf("\n");
+    
+    // Recursively print each child.
+    for (int i = 0; i < node->childCount; i++) {
+        printParseTree(node->children[i], indent + 1);
+    }
+}
+
 
 
 
