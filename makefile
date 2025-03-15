@@ -13,5 +13,5 @@ keyword_table.o: keyword_table.c keyword_table.h keyword_tableDef.h
 parser.o: parser.c parser.h parserDef.h lexer.h
 	gcc -w -c parser.c
 
-driver.o: driver.c
+driver.o: driver.c parser.h lexer.h
 	 gcc -w -c driver.c

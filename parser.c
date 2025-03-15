@@ -554,7 +554,7 @@ void initParser(char * filename){
     computeParseTable();
     //printParseTable();
     //printFollowSets();
-    printFirstSets();
+    //printFirstSets();
     parseInputSourceCode();
 }
 

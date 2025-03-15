@@ -2,9 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include "lexer.h"
-#include <fcntl.h>
-#include <unistd.h>   // For close(), read(), write()
+#include "lexer.h"   // For close(), read(), write()
 #include <sys/types.h> // For data types like off_t
 #include <sys/stat.h>  // For file permissions
 #include "parser.h"
@@ -225,7 +223,7 @@ int main(int argc, char* argv[]) {
             
             //     break;
             case 3: 
-                initParser(argv[1]);
+                initParser("grammar.txt");
                 break;
             default:
                 printf("Invalid choice. Please try again.\n");
