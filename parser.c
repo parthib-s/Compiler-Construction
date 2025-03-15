@@ -581,7 +581,7 @@ void initParser(char * filename){
     if(donesd == 0){
         return;
     }
-	printParseTree(root,0);
+	printParseTreeInOrder(root,0);
 	
 }
 
@@ -613,7 +613,30 @@ void printParseTree(ParseTreeNode* node, int indent) {
     }
 }
 
-
+// Recursively prints the parse tree with indentation.
+void printParseTreeInOrder(ParseTreeNode* node, int indent) {
+    if (node == NULL) return;
+    
+    // If there is at least one child, visit the leftmost child first.
+    if (node->childCount > 0) {
+        printParseTreeInOrder(node->children[0], indent + 1);
+    }
+    
+    // Print the current node with indentation.
+    for (int i = 0; i < indent; i++) {
+        printf("  ");
+    }
+    printf("%s", node->symbol);
+    if (strncmp(node->symbol, "TK_", 3) == 0 && node->token.LEXEME != NULL) {
+        printf(" (%s)", node->token.LEXEME);
+    }
+    printf("\n");
+    
+    // Then visit the remaining children (if any).
+    for (int i = 1; i < node->childCount; i++) {
+        printParseTreeInOrder(node->children[i], indent+1);
+    }
+}
 
 
 // int main(int argc, char *argv[]) {
