@@ -172,8 +172,9 @@ int main(int argc, char* argv[]) {
             // case 3:
             //     printf("Commencing parsing of input source code \n");
             //     printf("--------\n");
+                //initLexer(fp);
 
-            //     Grammar* g = extractGrammar();
+            //     
             //     printf("HERE\n");
 
             //     FirstAndFollow* fafl = computeFirstAndFollowSets(g);

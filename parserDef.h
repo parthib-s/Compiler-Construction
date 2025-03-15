@@ -1,112 +1,33 @@
-/* 
- * Group 08
- * Shubham Lather		2016A7PS0006P
- * Devyash Parihar		2016A7PS0066P
- * Rahul Khandelwal		2016A7PS0128P
- * Aniruddha Karve		2016A7PS0042P
- */
- 
- #ifndef PARSERDEF
- #define PARSERDEF
- 
- #include <stdbool.h>
- #include "lexerDef.h"
- //#include "symbolTable.h" 
- struct tablePointer ; 
-  
- #define NONTERMINAL_OFFSET 12345
- #define NO_OF_TERMINALS 56
- #define NO_OF_NONTERMINALS 50
- #define MAX_RULE_LEN 10
- #define NO_OF_PRODUCTIONS 90
- #define MAX_ID_SIZE 30
- #define RECORD_DATATYPE 50000
- 
- typedef struct
- {
-	 int numRules;
-	 int** rules;
- }nonTerminal;
- 
- typedef nonTerminal* Grammar;
- typedef struct{
-	 int* first;
- } first;
- 
- typedef struct tableEntry
- {
-	 int nonTerm;
-	 int productionNum;
-	 int syn;
- }tableEntry;
- 
- typedef first* FirstSet;
- typedef first* FollowSet;
- typedef tableEntry Table[NO_OF_NONTERMINALS][NO_OF_TERMINALS];
- 
- typedef enum { 
-	 program = NONTERMINAL_OFFSET,
-	 mainFunction,
-	 otherFunctions,
-	 function,
-	 input_par,
-	 output_par,
-	 parameter_list,
-	 dataType,
-	 primitiveDatatype,
-	 constructedDatatype,
-	 remaining_list,
-	 stmts,
-	 typeDefinitions,
-	 typeDefinition,
-	 fieldDefinitions,
-	 fieldDefinition,
-	 moreFields,
-	 declarations,
-	 declaration,
-	 global_or_not,
-	 otherStmts,
-	 stmt,
-	 assignmentStmt,
-	 singleOrRecId,
-	 singleOrRecIdPrime,
-	 funCallStmt,
-	 outputParameters,
-	 inputParameters,
-	 iterativeStmt,
-	 conditionalStmt,
-	 elsePart,
-	 ioStmt,
-	 allVar,
-	 arithmeticExpression,
-	 expPrime,
-	 term,
-	 termPrime,
-	 factor,
-	 highPrecedenceOperators,
-	 lowPrecedenceOperators,
-	 all,
-	 temp,
-	 booleanExpression,
-	 var,
-	 logicalOp,
-	 relationalOp,
-	 returnStmt,
-	 optionalReturn,
-	 idList,
-	 more_ids
- }nonTermIds;
- 
- typedef struct parsetree
- {
-	 int numChild;
-	 int numChildAST;
-	 tokenInfo* terminal;
-	 int ruleNo;
-	 int nonTerminal;
-	 struct parsetree* children;
-	 struct tablePointer* tp;
- } parsetree;
- typedef parsetree* parseTree;
- 
- #endif
+#ifndef PARSERDEF
+#define PARSERDEF
+#define MAX_CHILDREN 1000
+#define MAX_TOKEN_LENGTH 100
+// Define your structures here (or in separate header files)
+// Example for parse tree node:
+struct parseTreeNode {
+    tokenInfo token;  // valid only for leaf nodes
+    char nonTerminal[50];  // for non-leaf nodes
+    int lineNo;
+    struct parseTreeNode *parent;
+    struct parseTreeNode *children[MAX_CHILDREN]; // Define MAX_CHILDREN
+    int numChildren;
+    int isLeaf; // 1 for yes, 0 for no
+};
+
+typedef struct parseTreeNode parseTreeNode;
+typedef parseTreeNode* ParseTree;
+
+// Structure for a single production rule
+typedef struct {
+    char lhs[MAX_TOKEN_LENGTH]; // Left-hand side symbol
+    char **rhs;                 // Array of right-hand side symbols (strings)
+    int rhsCount;               // Number of symbols in RHS
+} Production;
+
+// Structure for the complete grammar
+typedef struct {
+    Production *productions;    // Array of production rules
+    int productionCount;        // Number of production rules
+} Grammar;
+
+#endif // !PARSERDEF
