@@ -1,5 +1,5 @@
-parser: parser.o lexer.o driver.o keyword_table.o nary_tree.o stack.o
-	gcc parser.o lexer.o driver.o keyword_table.o nary_tree.o stack.o -o myfinalprogram
+parser: parser.o lexer.o driver.o keyword_table.o stackADT.o setADT.o hashtable.o
+	gcc parser.o lexer.o driver.o keyword_table.o stackADT.o setADT.o hashtable.o -o myfinalprogram
 
 lexer: lexer.o keyword_table.o driver.o
 	gcc lexer.o keyword_table.o driver.o -o myprogram
@@ -13,11 +13,14 @@ keyword_table.o: keyword_table.c keyword_table.h keyword_tableDef.h
 parser.o: parser.c parser.h parserDef.h interface.h lexer.h
 	gcc -w -c parser.c
 
-nary_tree.o : nary_tree.c interface.h nary_treeDef.h nary_tree.h
-	gcc -w -c nary_tree.c
+stackADT.o : stackADT.c stackADT.h stackADTDef.h
+	gcc -w -c stackADT.c
 
-stack.o: stack.c stackDef.h nary_tree.h interface.h
-	gcc -w -c stack.c
+setADT.o : setADT.c setADT.h stackADTDef.h
+	gcc -w -c setADT.c
+
+hashtable.o : hashtable.c hashtable.h hashtableDef.h
+	gcc -w -c hashtable.c
 
 driver.o: driver.c
 	 gcc -w -c driver.c

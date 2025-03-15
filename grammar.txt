@@ -21,6 +21,12 @@ typeDefinitions actualOrRedefined typeDefinitions
 actualOrRedefined typeDefinition
 actualOrRedefined definetypestmt
 typeDefinitions TK_EPS
+singleOrRecId TK_ID option_single_constructed
+option_single_constructed TK_EPS 
+option_single_constructed oneExpansion moreExpansions
+oneExpansion TK_DOT TK_FIELDID
+moreExpansions oneExpansion moreExpansions
+moreExpansions TK_EPS
 typeDefinition TK_RECORD TK_RUID fieldDefinitions TK_ENDRECORD
 typeDefinition TK_UNION TK_RUID fieldDefinitions TK_ENDUNION
 fieldDefinitions fieldDefinition fieldDefinition moreFields
@@ -42,12 +48,6 @@ stmt conditionalStmt
 stmt ioStmt
 stmt funCallStmt
 assignmentStmt singleOrRecId TK_ASSIGNOP arithmeticExpression TK_SEM
-singleOrRecId TK_ID option_single_constructed
-option_single_constructed TK_EPS
-option_single_constructed oneExpansion moreExpansions
-oneExpansion TK_DOT TK_FIELDID
-moreExpansions oneExpansion moreExpansions
-moreExpansions TK_EPS
 funCallStmt outputParameters TK_CALL TK_FUNID TK_WITH TK_PARAMETERS inputParameters TK_SEM
 outputParameters TK_SQL idList TK_SQR TK_ASSIGNOP
 outputParameters TK_EPS
@@ -76,7 +76,6 @@ booleanExpression TK_NOT TK_OP booleanExpression TK_CL
 var singleOrRecId
 var TK_NUM
 var TK_RNUM
-singleOrRecId TK_ID
 logicalOp TK_AND
 logicalOp TK_OR
 relationalOp TK_LT
