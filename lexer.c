@@ -5,6 +5,13 @@
 #include <stdio.h>
 #define MAX_LEXEME_LENGTH 21  // 20 characters + 1 for the null terminator
 
+/* Group 13
+Virendrasinh Mane                           2022A7PS1175P
+Vishnu Chebolu                              2022A7PS0124P
+Shashwat Goyal                              2022A7PS0115P
+Parthib Sarkar                              2022A7PS0111P
+Samrath Singh Khanuja                       2022A7PS1171P
+Harsimar Singh Saluja                       2022A7PS1187P*/
 // Toggle flag for buffers
 KeywordTable* kt;
 FILE* fp;
