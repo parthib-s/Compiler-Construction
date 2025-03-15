@@ -511,9 +511,8 @@ ParseTreeNode* parseInputSourceCode() {
                 continue;
             } else {
                 // Terminal mismatch: report error and return NULL.
-                printf("Parse error: expected %s, got %s\n", 
-                       topNode->symbol, terminals[currToken.TOKEN_NAME]);
-                printf("Error in line number: %d\n", currToken.LINE_NO);
+                printf("Line %d  Error: The token %s for lexeme %s does not match with the expected token %s\n", 
+                    currToken.LINE_NO, terminals[currToken.TOKEN_NAME], currToken.LEXEME, topNode->symbol);
                 return NULL;
             }
         } else {
