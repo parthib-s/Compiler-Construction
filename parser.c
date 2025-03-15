@@ -2,18 +2,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-
-#define NUM_TERMINALS 61
-#define NUM_NON_TERMINALS 53
-#define MAX_PRODUCTIONS 200
-
-typedef struct {
-    char *lhs;
-    char **rhs;
-    int rhsCount;
-} Production;
+#include "lexer.h"
+#include "parser.h"
 
 Production productions[MAX_PRODUCTIONS];
+FirstSets firstSets;
+FollowSets followSets;
 int prodCount = 0;
 
 // Global array of terminals
@@ -88,12 +82,6 @@ char *nonterminals[NUM_NON_TERMINALS] = {
     "A"
 };
 
-// Global FIRST structure: each row corresponds to a nonterminal and each column to a terminal.
-typedef struct {
-    int table[NUM_NON_TERMINALS][NUM_TERMINALS];
-} FirstSets;
-
-FirstSets firstSets;
 
 // Helper: returns the index of a nonterminal in nonterminals[]
 int getNonterminalIndex(const char* nt) {
@@ -243,15 +231,6 @@ void printFirstSets() {
         printf("}\n");
     }
 }
-
-// --- FOLLOW Set Structure and Functions ---
-
-// Global FOLLOW structure: each row corresponds to a nonterminal and each column to a terminal.
-typedef struct {
-    int table[NUM_NON_TERMINALS][NUM_TERMINALS];
-} FollowSets;
-
-FollowSets followSets;
 
 // Computes the FOLLOW sets for all nonterminals using the productions and the FIRST sets.
 void computeFollowSets() {
@@ -451,22 +430,151 @@ void printParseTable() {
     }
 }
 
+//---------------------//
+// Parse Tree Structures
+//---------------------//
 
 
-int main(int argc, char *argv[]) {
-    if(argc < 2) {
-        fprintf(stderr, "Usage: %s grammar.txt\n", argv[0]);
-        return 1;
+ParseTreeNode* createNode(const char* symbol) {
+    ParseTreeNode* node = (ParseTreeNode*)malloc(sizeof(ParseTreeNode));
+    node->symbol = strdup(symbol);
+    node->childCount = 0;
+    node->children = NULL;
+    return node;
+}
+
+//---------------------//
+// Stack for Parse Tree Nodes
+//---------------------//
+
+Stack* createStack(int capacity) {
+    Stack* s = (Stack*)malloc(sizeof(Stack));
+    s->nodes = (ParseTreeNode**)malloc(sizeof(ParseTreeNode*) * capacity);
+    s->top = -1;
+    s->capacity = capacity;
+    return s;
+}
+
+void push(Stack* s, ParseTreeNode* node) {
+    if (s->top == s->capacity - 1) {
+        s->capacity *= 2;
+        s->nodes = (ParseTreeNode**)realloc(s->nodes, sizeof(ParseTreeNode*) * s->capacity);
+    }
+    s->nodes[++(s->top)] = node;
+}
+
+ParseTreeNode* pop(Stack* s) {
+    if(s->top < 0)
+        return NULL;
+    return s->nodes[(s->top)--];
+}
+
+ParseTreeNode* peek(Stack* s) {
+    if(s->top < 0)
+        return NULL;
+    return s->nodes[s->top];
+}
+
+//---------------------//
+// ParseInputSourceCode Function
+//---------------------//
+// This function builds a parse tree using the global parseTable and productions,
+// and uses getNextToken() to obtain tokens from the lexer.
+// It now skips tokens of type TK_COMMENT.
+ParseTreeNode* parseInputSourceCode() {
+    Stack* stack = createStack(100);
+    
+    // Create the root parse tree node with the start symbol (assumed to be nonterminals[0]).
+    ParseTreeNode* root = createNode(nonterminals[0]);
+    push(stack, root);
+    
+    // Get the first token.
+    tokenInfo currToken = getNextToken();
+    
+    while (stack->top != -1) {
+        // Skip comment tokens.
+        while (currToken.TOKEN_NAME == TK_COMMENT) {
+            currToken = getNextToken();
+        }
+        
+        ParseTreeNode* topNode = peek(stack);
+        
+        // If the top node is a terminal.
+        if (strncmp(topNode->symbol, "TK_", 3) == 0) {
+            int expectedTermIndex = getTerminalIndex(topNode->symbol);
+            if(expectedTermIndex == currToken.TOKEN_NAME) {
+                topNode->token = currToken;
+                pop(stack);
+                currToken = getNextToken();
+                continue;
+            } else {
+                printf("Parse error: expected %s, got %s\n", topNode->symbol, terminals[currToken.TOKEN_NAME]);
+                return NULL;
+            }
+        } else {
+            // The top node is a nonterminal.
+            int ntIndex = getNonterminalIndex(topNode->symbol);
+            int currTermIndex = currToken.TOKEN_NAME;
+            
+            // Use the parse table to decide production.
+            int prodIndex = parseTable[ntIndex][currTermIndex];
+            if(prodIndex == -1) {
+                printf("Parse error: no production for nonterminal %s on terminal %s\n",
+                       topNode->symbol, terminals[currTermIndex]);
+                return NULL;
+            }
+            
+            pop(stack);
+            Production prod = productions[prodIndex];
+            
+            // Create children nodes for each RHS symbol.
+            topNode->childCount = prod.rhsCount;
+            topNode->children = (ParseTreeNode**)malloc(sizeof(ParseTreeNode*) * prod.rhsCount);
+            for (int i = 0; i < prod.rhsCount; i++) {
+                ParseTreeNode* child = createNode(prod.rhs[i]);
+                topNode->children[i] = child;
+            }
+            
+            // Push children in reverse order.
+            for (int i = prod.rhsCount - 1; i >= 0; i--) {
+                push(stack, topNode->children[i]);
+            }
+        }
     }
     
-    readGrammar(argv[1]);
-    computeFirstSets();
-	computeFollowSets();
-	computeParseTable();
-	//printParseTable();
-	//printFollowSets();
-    //printFirstSets();
-	
-    
-    return 0;
+    free(stack->nodes);
+    free(stack);
+    return root;
 }
+
+void initParser(char * filename){
+	readGrammar(filename);
+    computeFirstSets();
+    computeFollowSets();
+    computeParseTable();
+    //printParseTable();
+    //printFollowSets();
+    printFirstSets();
+    parseInputSourceCode();
+}
+
+
+
+// int main(int argc, char *argv[]) {
+//     if(argc < 2) {
+//         fprintf(stderr, "Usage: %s grammar.txt\n", argv[0]);
+//         return 1;
+//     }
+    
+//     readGrammar(argv[1]);
+//     computeFirstSets();
+// 	computeFollowSets();
+// 	computeParseTable();
+// 	//printParseTable();
+// 	//printFollowSets();
+//     //printFirstSets();
+// 	parseInputSourceCode();
+
+    
+//     return 0;
+// }

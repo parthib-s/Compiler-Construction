@@ -224,7 +224,8 @@ int main(int argc, char* argv[]) {
             //     printf("Total CPU Time in Seconds: %f\n", total_CPU_time_in_seconds);
             
             //     break;
-            
+            case 3: 
+                initParser();
             default:
                 printf("Invalid choice. Please try again.\n");
                 break;
